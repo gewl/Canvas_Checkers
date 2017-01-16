@@ -2,8 +2,9 @@
 
 import chalk from 'chalk';
 import express from 'express';
-const app = express();
 const path = require('path');
+
+const app = require('./app').default()
 
 const port = process.env.PORT || 4040;
 const server = app.listen(port, (err) => {

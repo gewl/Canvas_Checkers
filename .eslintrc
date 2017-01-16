@@ -6,7 +6,7 @@
 			"jquery": false,
 			"mocha": false,
 			"jasmine": false
-	}
+	},
 	"parserOptions": {
 		"sourceType": "module",
 	}
