@@ -27,22 +27,6 @@ gulp.task('lintJS', function() {
 		.pipe(eslint.failOnError());
 })
 
-gulp.task('buildJS', ['lintJS'], function() {
-    return gulp.src(['./browser/js/app.js', './browser/js/**/*.js'])
-        .pipe(plumber())
-        .pipe(sourcemaps.init())
-        .pipe(concat('main.js'))
-        .pipe(babel({
-		            presets: ['es2015']
-		        }))
-        .pipe(sourcemaps.write())
-        .pipe(gulp.dest('./public'));
-});
-
-gulp.task('build', function() {
-	runSeq(['buildJS'])
-})
-
 // Browserify task
 gulp.task('browserify', function() {
 	var bundleStream = browserify({
@@ -60,10 +44,10 @@ gulp.task('browserify', function() {
 gulp.task('watch', function() {
 	livereload.listen()
 	gulp.watch('browser/js/**', function() {
-		runSeq('buildJS', 'browserify', 'reload');
+		runSeq('browserify', 'reload');
 	});
 	gulp.watch('server/**/*.js', ['lintJS']);
 	gulp.watch(['./public/index.html'], ['reload']);
 })
 
-gulp.task('default', ['build', 'browserify', 'watch'], function() {})
+gulp.task('default', ['lintJS', 'browserify', 'watch'], function() {})
