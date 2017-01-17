@@ -1,3 +1,5 @@
+import Piece from './piece';
+
 export default class Board {
 	constructor(properties) {
 		// create canvas
@@ -12,8 +14,46 @@ export default class Board {
 		this.ctx = ctx;
 		this.boardWidth = boardWidth;
 		this.cellWidth = cellWidth;
+		this.pieces = []
 
 		document.body.appendChild(canvas)
+	}
+
+	getPieces() {
+		return this.pieces
+	}
+
+	setPieces(pieces) {
+		this.pieces = pieces
+	}
+
+	drawPieces() {
+		let { cellWidth, ctx } = this
+
+		this.pieces.forEach(piece => {
+			ctx.beginPath();
+			ctx.arc(piece.x + cellWidth/2, piece.y + cellWidth/2, cellWidth/2 - 3,0,Math.PI*2,true);
+			ctx.lineWidth = 1
+			ctx.fillStyle = piece.color
+			ctx.fill()
+			ctx.stroke();
+		})
+	}
+
+	resetPieces() {
+		let { cellWidth } = this
+
+		for (var i = 0; i < 4; i++) {
+			this.pieces.push(
+				new Piece("red", (i*2 + 1) * cellWidth, 0),
+				new Piece("red", (i*2) * cellWidth, cellWidth),
+				new Piece("red", (i*2 + 1) * cellWidth, cellWidth * 2),
+				new Piece("black", (i*2) * cellWidth, cellWidth * 5),
+				new Piece("black", (i*2 + 1) * cellWidth, cellWidth * 6),
+				new Piece("black", (i*2) * cellWidth, cellWidth * 7)
+			)
+		}
+		this.drawPieces()
 	}
 
 	render() {
@@ -24,7 +64,7 @@ export default class Board {
 				if (fillYellow) {
 					ctx.fillStyle = "lightyellow"
 				} else {
-					ctx.fillStyle = "#404040"
+					ctx.fillStyle = "#606060"
 				}
 				fillYellow = !fillYellow
 				ctx.fillRect(j * cellWidth, i * cellWidth, cellWidth, cellWidth)
@@ -40,12 +80,5 @@ export default class Board {
 			ctx.lineWidth = 2
 			ctx.stroke()
 		}
-
-		ctx.beginPath();
-		ctx.arc(0 + cellWidth/2,0 + cellWidth/2,cellWidth/2 - 3,0,Math.PI*2,true);
-		ctx.lineWidth = 1
-		ctx.fillStyle = "red"
-		ctx.fill()
-		ctx.stroke();
 	}
 }
