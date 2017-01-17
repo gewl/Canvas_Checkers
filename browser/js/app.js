@@ -33,5 +33,7 @@ function init() {
 	ctx.stroke();
 }
 
+board.default()
+
 let socket = io.connect('http://localhost:4040')
 

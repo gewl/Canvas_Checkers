@@ -1,5 +1,10 @@
+export default function() {
+	console.log('hi')
+}
+
 // export default Board {
 // 	init: function() {
+//
 // 		ctx.fillStyle = "lightyellow"
 // 		ctx.fillRect(0, 0, boardWidth, boardWidth)
 

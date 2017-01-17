@@ -9,6 +9,7 @@ var sourcemaps = require('gulp-sourcemaps')
 var concat = require('gulp-concat')
 var browserify = require('browserify')
 var source = require('vinyl-source-stream')
+var babelify = require('babelify')
 
 gulp.task('reload', function() {
 	livereload.reload();
@@ -38,39 +39,21 @@ gulp.task('buildJS', ['lintJS'], function() {
         .pipe(gulp.dest('./public'));
 });
 
-
 gulp.task('build', function() {
 	runSeq(['buildJS'])
 })
-
-
-// Clean task
-// gulp.task('clean', function() {
-// 	gulp.src('./dist/views', { read: false }) // much faster
-// 		.pipe(rimraf({force: true}));
-// })
-
-// Browserify task
-// gulp.task('browserify', function() {
-// 	// Single point of entry (make sure not to src ALL your files, browserify will figure it out)
-// 	gulp.src(['./browser/js/app.js'])
-// 		.pipe(browserify({
-// 			insertGlobals: true,
-// 			debug: false
-// 		}))
-// 	// Bundle to a single file
-// 		.pipe(concat('bundle.js'))
-// 	// Output it to our dist folder
-// 		.pipe(gulp.dest('dist/js'));
-// });
-
 
 // Browserify task
 gulp.task('browserify', function() {
 	var bundleStream = browserify({
 		entries: ['./browser/js/app.js'],
 		debug: true
-	}).bundle().pipe(source('core.js'));
+	})
+		.transform(babelify.configure({
+			presets: ["es2015"]
+		}))
+		.bundle()
+		.pipe(source('core.js'));
 	return bundleStream.pipe(gulp.dest('./public/js'));
 });
 
