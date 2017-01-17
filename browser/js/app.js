@@ -1,3 +1,5 @@
+const board = require('./board')
+
  // create canvas
 const canvas = document.createElement("canvas")
 const ctx = canvas.getContext("2d")
@@ -31,4 +33,5 @@ function init() {
 	ctx.stroke();
 }
 
-Board.init()
+let socket = io.connect('http://localhost:4040')
+

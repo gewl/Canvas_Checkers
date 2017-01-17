@@ -14,5 +14,5 @@ const server = app.listen(port, (err) => {
 const io = require('socket.io').listen(server);
 
 io.sockets.on('connection', socket => {
-	console.log(socket)
+	console.log(`Socket connected: ${socket.id}`)
 })
