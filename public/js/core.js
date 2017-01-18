@@ -13,9 +13,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var board = new _board2.default();
 board.render();
-board.resetPieces();
 
 var socket = io.connect('http://localhost:4040');
+
+socket.on('gameStart', function () {
+	board.resetPieces();
+});
 
 },{"./board":2,"./piece":3}],2:[function(require,module,exports){
 "use strict";
@@ -36,50 +39,126 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Board = function () {
 	function Board(properties) {
+		var _this = this;
+
 		_classCallCheck(this, Board);
 
 		// create canvas
 		var canvas = document.createElement("canvas");
-		var ctx = canvas.getContext("2d");
-
 		var boardWidth = 640;
-		var cellWidth = boardWidth / 8;
-
 		canvas.width = boardWidth;
 		canvas.height = boardWidth;
-		this.ctx = ctx;
-		this.boardWidth = boardWidth;
-		this.cellWidth = cellWidth;
-		this.pieces = [];
+
+		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d");
+		this.boardWidth = 640;
+		this.cellWidth = boardWidth / 8;
+		this.board = [];
+		this.cellSelected = false;
+
+		//event listener for clicks to allow piece movement
+		canvas.addEventListener('mousedown', function (e) {
+			var mouse = _this.getMouse(e);
+		});
 
 		document.body.appendChild(canvas);
 	}
 
 	_createClass(Board, [{
-		key: "getPieces",
-		value: function getPieces() {
-			return this.pieces;
+		key: "getMouse",
+		value: function getMouse(event) {
+			var canvas = this.canvas,
+			    offsetX = 0,
+			    offsetY = 0,
+			    mx = void 0,
+			    my = void 0;
+
+			var x = Math.floor(event.offsetX / 80);
+			var y = Math.floor(event.offsetY / 80);
+
+			if (this.board[y][x] === 'B' && !this.cellSelected) {
+				this.selectCell(x, y);
+			} else {
+				this.redrawBoard();
+			}
 		}
 	}, {
-		key: "setPieces",
-		value: function setPieces(pieces) {
-			this.pieces = pieces;
+		key: "selectCell",
+		value: function selectCell(x, y) {
+			var cellWidth = this.cellWidth,
+			    ctx = this.ctx;
+
+			x = x * cellWidth;
+			y = y * cellWidth;
+			ctx.strokeStyle = 'limegreen';
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.lineTo(x + cellWidth, y);
+			ctx.lineTo(x + cellWidth, y + cellWidth);
+			ctx.lineTo(x, y + cellWidth);
+			ctx.lineTo(x, y);
+			ctx.lineWidth = 3;
+			ctx.stroke();
+			this.cellSelected = true;
+		}
+	}, {
+		key: "getBoard",
+		value: function getBoard() {
+			return this.board;
+		}
+	}, {
+		key: "setBoard",
+		value: function setBoard(board) {
+			this.board = board;
+		}
+	}, {
+		key: "drawPiece",
+		value: function drawPiece(color, x, y) {
+			var cellWidth = this.cellWidth,
+			    ctx = this.ctx;
+
+			ctx.beginPath();
+			ctx.arc(x + cellWidth / 2, y + cellWidth / 2, cellWidth / 2 - 3, 0, Math.PI * 2, true);
+			ctx.lineWidth = 1;
+			ctx.fillStyle = color;
+			ctx.fill();
+			ctx.stroke();
 		}
 	}, {
 		key: "drawPieces",
 		value: function drawPieces() {
+			var _this2 = this;
+
 			var cellWidth = this.cellWidth,
 			    ctx = this.ctx;
 
 
-			this.pieces.forEach(function (piece) {
-				ctx.beginPath();
-				ctx.arc(piece.x + cellWidth / 2, piece.y + cellWidth / 2, cellWidth / 2 - 3, 0, Math.PI * 2, true);
-				ctx.lineWidth = 1;
-				ctx.fillStyle = piece.color;
-				ctx.fill();
-				ctx.stroke();
+			this.board.forEach(function (row, y) {
+				row.forEach(function (square, x) {
+					if (square === 'R') {
+						_this2.drawPiece('red', x * cellWidth, y * cellWidth);
+					} else if (square === 'B') {
+						_this2.drawPiece('black', x * cellWidth, y * cellWidth);
+					}
+				});
 			});
+
+			// this.pieces.forEach(piece => {
+			// 	ctx.beginPath();
+			// 	ctx.arc(piece.x + cellWidth/2, piece.y + cellWidth/2, cellWidth/2 - 3,0,Math.PI*2,true);
+			// 	ctx.lineWidth = 1
+			// 	ctx.fillStyle = piece.color
+			// 	ctx.fill()
+			// 	ctx.stroke();
+			// })
+		}
+	}, {
+		key: "redrawBoard",
+		value: function redrawBoard() {
+			this.ctx.clearRect(0, 0, this.boardWidth, this.boardWidth);
+			this.render();
+			this.drawPieces();
+			this.cellSelected = false;
 		}
 	}, {
 		key: "resetPieces",
@@ -87,9 +166,18 @@ var Board = function () {
 			var cellWidth = this.cellWidth;
 
 
-			for (var i = 0; i < 4; i++) {
-				this.pieces.push(new _piece2.default("red", (i * 2 + 1) * cellWidth, 0), new _piece2.default("red", i * 2 * cellWidth, cellWidth), new _piece2.default("red", (i * 2 + 1) * cellWidth, cellWidth * 2), new _piece2.default("black", i * 2 * cellWidth, cellWidth * 5), new _piece2.default("black", (i * 2 + 1) * cellWidth, cellWidth * 6), new _piece2.default("black", i * 2 * cellWidth, cellWidth * 7));
-			}
+			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 'R', 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+
+			// for (var i = 0; i < 4; i++) {
+			// 	this.pieces.push(
+			// 		new Piece("red", (i*2 + 1) * cellWidth, 0),
+			// 		new Piece("red", (i*2) * cellWidth, cellWidth),
+			// 		new Piece("red", (i*2 + 1) * cellWidth, cellWidth * 2),
+			// 		new Piece("black", (i*2) * cellWidth, cellWidth * 5),
+			// 		new Piece("black", (i*2 + 1) * cellWidth, cellWidth * 6),
+			// 		new Piece("black", (i*2) * cellWidth, cellWidth * 7)
+			// 	)
+			// }
 			this.drawPieces();
 		}
 	}, {
@@ -112,6 +200,7 @@ var Board = function () {
 				}
 			}
 
+			ctx.strokeStyle = 'black';
 			for (var _i = 0; _i <= boardWidth; _i += cellWidth) {
 				ctx.beginPath();
 				ctx.moveTo(_i, 0);
