@@ -1,4 +1,5 @@
 import Piece from './piece';
+import _ from 'lodash';
 
 export default class Board {
 	constructor(properties) {
@@ -30,15 +31,20 @@ export default class Board {
 	}
 
 	getMouse(event) {
-		let { canvas } = this, offsetX = 0, offsetY = 0, mx, my;
+		let { canvas, availableMoves, cellSelected } = this, offsetX = 0, offsetY = 0, mx, my;
 
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
 
+		if (availableMoves.length) console.log(availableMoves)
 		// if selected valid piece to move, highlight square;
 		// else, dehighlight/deselect
-		if (this.board[y][x] === 'B' && !this.cellSelected) {
+		if (this.board[y][x] === 'B' && !cellSelected) {
 			this.selectCell(x, y)
+		} else if ( availableMoves.some( coords => _.isEqual(coords, [x,y]) ) ) {
+			this.board[y][x] = 'B'
+			this.board[cellSelected[1]][cellSelected[0]] = 0
+			this.redrawBoard()
 		} else {
 			this.redrawBoard()
 		}
@@ -59,7 +65,7 @@ export default class Board {
 		ctx.lineTo(coordsX, coordsY)
 		ctx.lineWidth = 3
 		ctx.stroke()
-		this.cellSelected = true;
+		this.cellSelected = [x, y];
 		this.highlightMoves(x, y)
 	}
 
@@ -76,15 +82,15 @@ export default class Board {
 	highlightCell(x, y) {
 		//highlight selected square in blue
 		let { cellWidth, ctx } = this
-		x = x * cellWidth
-		y = y * cellWidth
+		let coordsX = x * cellWidth
+		let coordsY = y * cellWidth
 		ctx.strokeStyle = 'lightblue'
 		ctx.beginPath()
-		ctx.moveTo(x, y)
-		ctx.lineTo(x + cellWidth, y)
-		ctx.lineTo(x + cellWidth, y + cellWidth)
-		ctx.lineTo(x, y + cellWidth)
-		ctx.lineTo(x, y)
+		ctx.moveTo(coordsX, coordsY)
+		ctx.lineTo(coordsX + cellWidth, coordsY)
+		ctx.lineTo(coordsX + cellWidth, coordsY + cellWidth)
+		ctx.lineTo(coordsX, coordsY + cellWidth)
+		ctx.lineTo(coordsX, coordsY)
 		ctx.lineWidth = 3
 		ctx.stroke()
 		// push dimensions to availableMoves

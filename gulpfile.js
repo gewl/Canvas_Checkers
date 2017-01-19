@@ -10,6 +10,7 @@ var concat = require('gulp-concat')
 var browserify = require('browserify')
 var source = require('vinyl-source-stream')
 var babelify = require('babelify')
+var lodash = require('gulp-lodash')
 
 gulp.task('reload', function() {
 	livereload.reload();
