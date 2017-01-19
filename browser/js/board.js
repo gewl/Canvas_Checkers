@@ -8,12 +8,18 @@ export default class Board {
 		canvas.width = boardWidth
 		canvas.height = boardWidth
 
+		// maintaining reference to HTML5 canvas for rendering
 		this.canvas = canvas;
 		this.ctx = canvas.getContext("2d");
+		// sizing
 		this.boardWidth = 640;
 		this.cellWidth = boardWidth/8;
+		// arrangement of pieces/empty cells
 		this.board = [];
+		// if a valid move target has been clicked
 		this.cellSelected = false;
+		// cells that selected piece can move to
+		this.availableMoves = []
 
 		//event listener for clicks to allow piece movement
 		canvas.addEventListener('mousedown', e => {
@@ -29,6 +35,8 @@ export default class Board {
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
 
+		// if selected valid piece to move, highlight square;
+		// else, dehighlight/deselect
 		if (this.board[y][x] === 'B' && !this.cellSelected) {
 			this.selectCell(x, y)
 		} else {
@@ -36,11 +44,41 @@ export default class Board {
 		}
 	}
 
+	//select piece that can be moved
 	selectCell(x, y) {
+		//highlight selected square in green
+		let { cellWidth, ctx } = this
+		let coordsX = x * cellWidth
+		let coordsY = y * cellWidth
+		ctx.strokeStyle = 'limegreen'
+		ctx.beginPath()
+		ctx.moveTo(coordsX, coordsY)
+		ctx.lineTo(coordsX + cellWidth, coordsY)
+		ctx.lineTo(coordsX + cellWidth, coordsY + cellWidth)
+		ctx.lineTo(coordsX, coordsY + cellWidth)
+		ctx.lineTo(coordsX, coordsY)
+		ctx.lineWidth = 3
+		ctx.stroke()
+		this.cellSelected = true;
+		this.highlightMoves(x, y)
+	}
+
+	highlightMoves(x, y) {
+		let { board } = this
+		if (board[y-1][x-1] === 0) {
+			this.highlightCell(x-1, y-1)
+		}
+		if (board[y-1][x+1] === 0) {
+			this.highlightCell(x+1, y-1)
+		}
+	}
+
+	highlightCell(x, y) {
+		//highlight selected square in blue
 		let { cellWidth, ctx } = this
 		x = x * cellWidth
 		y = y * cellWidth
-		ctx.strokeStyle = 'limegreen'
+		ctx.strokeStyle = 'lightblue'
 		ctx.beginPath()
 		ctx.moveTo(x, y)
 		ctx.lineTo(x + cellWidth, y)
@@ -49,7 +87,8 @@ export default class Board {
 		ctx.lineTo(x, y)
 		ctx.lineWidth = 3
 		ctx.stroke()
-		this.cellSelected = true;
+		// push dimensions to availableMoves
+		this.availableMoves.push([x, y])
 	}
 
 	getBoard() {
@@ -82,15 +121,6 @@ export default class Board {
 				}
 			})
 		})
-
-		// this.pieces.forEach(piece => {
-		// 	ctx.beginPath();
-		// 	ctx.arc(piece.x + cellWidth/2, piece.y + cellWidth/2, cellWidth/2 - 3,0,Math.PI*2,true);
-		// 	ctx.lineWidth = 1
-		// 	ctx.fillStyle = piece.color
-		// 	ctx.fill()
-		// 	ctx.stroke();
-		// })
 	}
 
 	redrawBoard() {
@@ -98,6 +128,7 @@ export default class Board {
 		this.render()
 		this.drawPieces()
 		this.cellSelected = false
+		this.availableMoves = []
 	}
 
 	resetPieces() {
@@ -114,16 +145,6 @@ export default class Board {
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
 		]
 
-		// for (var i = 0; i < 4; i++) {
-		// 	this.pieces.push(
-		// 		new Piece("red", (i*2 + 1) * cellWidth, 0),
-		// 		new Piece("red", (i*2) * cellWidth, cellWidth),
-		// 		new Piece("red", (i*2 + 1) * cellWidth, cellWidth * 2),
-		// 		new Piece("black", (i*2) * cellWidth, cellWidth * 5),
-		// 		new Piece("black", (i*2 + 1) * cellWidth, cellWidth * 6),
-		// 		new Piece("black", (i*2) * cellWidth, cellWidth * 7)
-		// 	)
-		// }
 		this.drawPieces()
 	}
 
