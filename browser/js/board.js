@@ -36,15 +36,16 @@ export default class Board {
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
 
-		if (availableMoves.length) console.log(availableMoves)
 		// if selected valid piece to move, highlight square;
-		// else, dehighlight/deselect
 		if (this.board[y][x] === 'B' && !cellSelected) {
 			this.selectCell(x, y)
+		// if selected available square to move selected to,
+		// move piece & redraw
 		} else if ( availableMoves.some( coords => _.isEqual(coords, [x,y]) ) ) {
 			this.board[y][x] = 'B'
 			this.board[cellSelected[1]][cellSelected[0]] = 0
 			this.redrawBoard()
+		// else, dehighlight/deselect
 		} else {
 			this.redrawBoard()
 		}
@@ -71,12 +72,21 @@ export default class Board {
 
 	highlightMoves(x, y) {
 		let { board } = this
-		if (board[y-1][x-1] === 0) {
-			this.highlightCell(x-1, y-1)
-		}
-		if (board[y-1][x+1] === 0) {
-			this.highlightCell(x+1, y-1)
-		}
+		let cellsToEvaluate = [
+			[ x-1, y-1 ],
+			[ x+1, y-1 ]
+		]
+
+		cellsToEvaluate.forEach(cell => {
+			switch ( board[ cell[1] ][ cell[0] ] ) {
+				case 0:
+					this.highlightCell(...cell);
+					break;
+				case 'R':
+					this.highlightMoves(...cell);
+					break;
+			}
+		})
 	}
 
 	highlightCell(x, y) {
@@ -145,7 +155,7 @@ export default class Board {
 			[ 'R', 0, 'R', 0, 'R', 0, 'R', 0 ],
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
-			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
+			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
 			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]

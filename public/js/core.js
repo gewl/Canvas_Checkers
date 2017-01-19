@@ -39,6 +39,8 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Board = function () {
@@ -89,17 +91,18 @@ var Board = function () {
 			var x = Math.floor(event.offsetX / 80);
 			var y = Math.floor(event.offsetY / 80);
 
-			if (availableMoves.length) console.log(availableMoves);
 			// if selected valid piece to move, highlight square;
-			// else, dehighlight/deselect
 			if (this.board[y][x] === 'B' && !cellSelected) {
 				this.selectCell(x, y);
+				// if selected available square to move selected to,
+				// move piece & redraw
 			} else if (availableMoves.some(function (coords) {
 				return _lodash2.default.isEqual(coords, [x, y]);
 			})) {
 				this.board[y][x] = 'B';
 				this.board[cellSelected[1]][cellSelected[0]] = 0;
 				this.redrawBoard();
+				// else, dehighlight/deselect
 			} else {
 				this.redrawBoard();
 			}
@@ -131,14 +134,22 @@ var Board = function () {
 	}, {
 		key: 'highlightMoves',
 		value: function highlightMoves(x, y) {
+			var _this2 = this;
+
 			var board = this.board;
 
-			if (board[y - 1][x - 1] === 0) {
-				this.highlightCell(x - 1, y - 1);
-			}
-			if (board[y - 1][x + 1] === 0) {
-				this.highlightCell(x + 1, y - 1);
-			}
+			var cellsToEvaluate = [[x - 1, y - 1], [x + 1, y - 1]];
+
+			cellsToEvaluate.forEach(function (cell) {
+				switch (board[cell[1]][cell[0]]) {
+					case 0:
+						_this2.highlightCell.apply(_this2, _toConsumableArray(cell));
+						break;
+					case 'R':
+						_this2.highlightMoves.apply(_this2, _toConsumableArray(cell));
+						break;
+				}
+			});
 		}
 	}, {
 		key: 'highlightCell',
@@ -187,7 +198,7 @@ var Board = function () {
 	}, {
 		key: 'drawPieces',
 		value: function drawPieces() {
-			var _this2 = this;
+			var _this3 = this;
 
 			var cellWidth = this.cellWidth,
 			    ctx = this.ctx;
@@ -196,9 +207,9 @@ var Board = function () {
 			this.board.forEach(function (row, y) {
 				row.forEach(function (square, x) {
 					if (square === 'R') {
-						_this2.drawPiece('red', x * cellWidth, y * cellWidth);
+						_this3.drawPiece('red', x * cellWidth, y * cellWidth);
 					} else if (square === 'B') {
-						_this2.drawPiece('black', x * cellWidth, y * cellWidth);
+						_this3.drawPiece('black', x * cellWidth, y * cellWidth);
 					}
 				});
 			});
@@ -218,7 +229,7 @@ var Board = function () {
 			var cellWidth = this.cellWidth;
 
 
-			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 'R', 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 'R', 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
 
 			this.drawPieces();
 		}
