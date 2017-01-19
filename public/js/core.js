@@ -67,6 +67,11 @@ var Board = function () {
 		this.cellSelected = false;
 		// cells that selected piece can move to
 		this.availableMoves = [];
+		// if already jumped this turn, this tracks (and points to) piece that is jumping
+		this.hasJumped = false;
+		this.jumpCell = [];
+
+		this.doneMoving = false;
 
 		//event listener for clicks to allow piece movement
 		canvas.addEventListener('mousedown', function (e) {
@@ -82,6 +87,9 @@ var Board = function () {
 			var canvas = this.canvas,
 			    availableMoves = this.availableMoves,
 			    cellSelected = this.cellSelected,
+			    hasJumped = this.hasJumped,
+			    jumpCell = this.jumpCell,
+			    doneMoving = this.doneMoving,
 			    offsetX = 0,
 			    offsetY = 0,
 			    mx = void 0,
@@ -91,12 +99,18 @@ var Board = function () {
 
 			var x = Math.floor(event.offsetX / 80);
 			var y = Math.floor(event.offsetY / 80);
+			// console.log('break')
+			// console.log(hasJumped)
+			// console.log(doneMoving)
+			// console.log(_.isEqual([x, y], jumpCell))
 
 			// if selected valid piece to move, highlight square;
-			if (this.board[y][x] === 'B' && !cellSelected) {
+			if (this.board[y][x] === 'B' && !cellSelected && !hasJumped && !doneMoving) {
 				this.markCell(x, y, "select");
 				// if selected available square to move selected to,
 				// move piece & redraw
+			} else if (hasJumped && !doneMoving && _lodash2.default.isEqual([x, y], jumpCell)) {
+				this.markCell(x, y, "select");
 			} else if (availableMoves.some(function (coords) {
 				return _lodash2.default.isEqual(coords, [x, y]);
 			})) {
@@ -117,8 +131,15 @@ var Board = function () {
 				var jumpedX = (originX + destinationX) / 2;
 				var jumpedY = (originY + destinationY) / 2;
 				this.board[jumpedY][jumpedX] = 0;
+				this.jumpCell = [destinationX, destinationY];
+				this.hasJumped = true;
 			}
 			this.redrawBoard();
+			if (this.hasJumped && this.highlightMoves.apply(this, _toConsumableArray(this.jumpCell))) {
+				this.markCell.apply(this, _toConsumableArray(this.jumpCell).concat(["select"]));
+			} else {
+				this.doneMoving = true;
+			}
 		}
 
 		// all-purpose function for highlighting cell
@@ -158,6 +179,8 @@ var Board = function () {
 
 			var cellsToEvaluate = [[x - 1, y - 1], [x + 1, y - 1]];
 
+			var anyJumpableSquares = false;
+
 			// evaluate possible move cells to discern legal moves
 			cellsToEvaluate.forEach(function (cell) {
 				switch (board[cell[1]][cell[0]]) {
@@ -173,11 +196,15 @@ var Board = function () {
 						} else {
 							jumpCell = [cell[0] + 1, cell[1] - 1];
 						}
-						if (board[jumpCell[1]] === undefined || board[jumpCell[1]][jumpCell[0]] === 'R') break;
-						_this2.highlightCell.apply(_this2, _toConsumableArray(jumpCell));
+						if (board[jumpCell[1]] != undefined && board[jumpCell[1]][jumpCell[0]] === 0) {
+							_this2.highlightCell.apply(_this2, _toConsumableArray(jumpCell));
+							anyJumpableSquares = true;
+						}
 						break;
 				}
 			});
+
+			return anyJumpableSquares;
 		}
 	}, {
 		key: 'highlightCell',

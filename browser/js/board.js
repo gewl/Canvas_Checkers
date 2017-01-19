@@ -21,6 +21,11 @@ export default class Board {
 		this.cellSelected = false;
 		// cells that selected piece can move to
 		this.availableMoves = []
+		// if already jumped this turn, this tracks (and points to) piece that is jumping
+		this.hasJumped = false;
+		this.jumpCell = [];
+
+		this.doneMoving = false;
 
 		//event listener for clicks to allow piece movement
 		canvas.addEventListener('mousedown', e => {
@@ -31,17 +36,23 @@ export default class Board {
 	}
 
 	getMouse(event) {
-		let { canvas, availableMoves, cellSelected } = this, offsetX = 0, offsetY = 0, mx, my;
+		let { canvas, availableMoves, cellSelected, hasJumped, jumpCell, doneMoving } = this, offsetX = 0, offsetY = 0, mx, my;
 
 		// click coordinate
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
+		// console.log('break')
+		// console.log(hasJumped)
+		// console.log(doneMoving)
+		// console.log(_.isEqual([x, y], jumpCell))
 
 		// if selected valid piece to move, highlight square;
-		if (this.board[y][x] === 'B' && !cellSelected) {
+		if (this.board[y][x] === 'B' && !cellSelected && !hasJumped && !doneMoving) {
 			this.markCell(x, y, "select")
 		// if selected available square to move selected to,
 		// move piece & redraw
+		} else if (hasJumped && !doneMoving && _.isEqual([x, y], jumpCell)) {
+			this.markCell(x, y, "select")
 		} else if ( availableMoves.some( coords => _.isEqual(coords, [x,y]) ) ) {
 			this.movePiece( cellSelected[0], cellSelected[1], x, y )
 		// else, dehighlight/deselect
@@ -59,8 +70,15 @@ export default class Board {
 			let jumpedX = ( originX + destinationX )/2
 			let jumpedY = ( originY + destinationY )/2
 			this.board[jumpedY][jumpedX] = 0
+			this.jumpCell = [destinationX, destinationY]
+			this.hasJumped = true;
 		}
 		this.redrawBoard();
+		if (this.hasJumped && this.highlightMoves(...this.jumpCell)) {
+			this.markCell(...this.jumpCell, "select")
+		} else {
+			this.doneMoving = true
+		}
 	}
 
 	// all-purpose function for highlighting cell
@@ -94,6 +112,8 @@ export default class Board {
 			[ x+1, y-1 ]
 		]
 
+		let anyJumpableSquares = false
+		
 		// evaluate possible move cells to discern legal moves
 		cellsToEvaluate.forEach(cell => {
 			switch ( board[ cell[1] ][ cell[0] ] ) {
@@ -109,11 +129,15 @@ export default class Board {
 					} else {
 						jumpCell = [ cell[0] + 1, cell[1] - 1 ]
 					}
-					if (board[ jumpCell[1]] === undefined || board[ jumpCell[1] ][ jumpCell[0] ] === 'R') break;
-					this.highlightCell(...jumpCell);
+					if (board[ jumpCell[1]] != undefined && board[ jumpCell[1] ][ jumpCell[0] ] === 0) {
+						this.highlightCell(...jumpCell);
+						anyJumpableSquares = true;
+					}
 					break;
 			}
 		})
+
+		return anyJumpableSquares;
 	}
 
 	highlightCell(x, y) {
