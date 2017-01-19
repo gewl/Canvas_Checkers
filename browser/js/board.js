@@ -33,31 +33,50 @@ export default class Board {
 	getMouse(event) {
 		let { canvas, availableMoves, cellSelected } = this, offsetX = 0, offsetY = 0, mx, my;
 
+		// click coordinate
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
 
 		// if selected valid piece to move, highlight square;
 		if (this.board[y][x] === 'B' && !cellSelected) {
-			this.selectCell(x, y)
+			this.markCell(x, y, "select")
 		// if selected available square to move selected to,
 		// move piece & redraw
 		} else if ( availableMoves.some( coords => _.isEqual(coords, [x,y]) ) ) {
-			this.board[y][x] = 'B'
-			this.board[cellSelected[1]][cellSelected[0]] = 0
-			this.redrawBoard()
+			this.movePiece( cellSelected[0], cellSelected[1], x, y )
 		// else, dehighlight/deselect
 		} else {
 			this.redrawBoard()
 		}
 	}
 
-	//select piece that can be moved
-	selectCell(x, y) {
-		//highlight selected square in green
+	movePiece(originX, originY, destinationX, destinationY) {
+		this.board[destinationY][destinationX] = 'B'
+		this.board[originY][originX] = 0
+		let distanceTraveled = Math.abs(destinationY - originY)
+		// if piece traveled further than one row, delete the pieces it passed over
+		if (distanceTraveled > 1) {
+			let jumpedX = ( originX + destinationX )/2
+			let jumpedY = ( originY + destinationY )/2
+			this.board[jumpedY][jumpedX] = 0
+		}
+		this.redrawBoard();
+	}
+
+	// all-purpose function for highlighting cell
+	markCell(x, y, action) {
 		let { cellWidth, ctx } = this
 		let coordsX = x * cellWidth
 		let coordsY = y * cellWidth
-		ctx.strokeStyle = 'limegreen'
+		if (action === "highlight")	 {
+			this.availableMoves.push([x, y])
+			ctx.strokeStyle = 'lightblue'
+		} else if (action === "select") {
+			this.cellSelected = [x, y];
+			this.highlightMoves(x, y)
+			ctx.strokeStyle = 'limegreen'
+		}
+		// push dimensions to availableMoves
 		ctx.beginPath()
 		ctx.moveTo(coordsX, coordsY)
 		ctx.lineTo(coordsX + cellWidth, coordsY)
@@ -66,8 +85,6 @@ export default class Board {
 		ctx.lineTo(coordsX, coordsY)
 		ctx.lineWidth = 3
 		ctx.stroke()
-		this.cellSelected = [x, y];
-		this.highlightMoves(x, y)
 	}
 
 	highlightMoves(x, y) {
@@ -77,13 +94,23 @@ export default class Board {
 			[ x+1, y-1 ]
 		]
 
+		// evaluate possible move cells to discern legal moves
 		cellsToEvaluate.forEach(cell => {
 			switch ( board[ cell[1] ][ cell[0] ] ) {
+				// empty cell: can move	
 				case 0:
-					this.highlightCell(...cell);
+					this.markCell(...cell, "highlight");
 					break;
+				// enemy piece: can skip
 				case 'R':
-					this.highlightMoves(...cell);
+					var jumpCell
+					if ( cell[0] < x) {
+						jumpCell = [ cell[0] - 1, cell[1] - 1 ]
+					} else {
+						jumpCell = [ cell[0] + 1, cell[1] - 1 ]
+					}
+					if (board[ jumpCell[1]] === undefined || board[ jumpCell[1] ][ jumpCell[0] ] === 'R') break;
+					this.highlightCell(...jumpCell);
 					break;
 			}
 		})
@@ -152,7 +179,7 @@ export default class Board {
 
 		this.board = [
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			[ 'R', 0, 'R', 0, 'R', 0, 'R', 0 ],
+			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],

@@ -87,39 +87,59 @@ var Board = function () {
 			    mx = void 0,
 			    my = void 0;
 
+			// click coordinate
 
 			var x = Math.floor(event.offsetX / 80);
 			var y = Math.floor(event.offsetY / 80);
 
 			// if selected valid piece to move, highlight square;
 			if (this.board[y][x] === 'B' && !cellSelected) {
-				this.selectCell(x, y);
+				this.markCell(x, y, "select");
 				// if selected available square to move selected to,
 				// move piece & redraw
 			} else if (availableMoves.some(function (coords) {
 				return _lodash2.default.isEqual(coords, [x, y]);
 			})) {
-				this.board[y][x] = 'B';
-				this.board[cellSelected[1]][cellSelected[0]] = 0;
-				this.redrawBoard();
+				this.movePiece(cellSelected[0], cellSelected[1], x, y);
 				// else, dehighlight/deselect
 			} else {
 				this.redrawBoard();
 			}
 		}
+	}, {
+		key: 'movePiece',
+		value: function movePiece(originX, originY, destinationX, destinationY) {
+			this.board[destinationY][destinationX] = 'B';
+			this.board[originY][originX] = 0;
+			var distanceTraveled = Math.abs(destinationY - originY);
+			// if piece traveled further than one row, delete the pieces it passed over
+			if (distanceTraveled > 1) {
+				var jumpedX = (originX + destinationX) / 2;
+				var jumpedY = (originY + destinationY) / 2;
+				this.board[jumpedY][jumpedX] = 0;
+			}
+			this.redrawBoard();
+		}
 
-		//select piece that can be moved
+		// all-purpose function for highlighting cell
 
 	}, {
-		key: 'selectCell',
-		value: function selectCell(x, y) {
-			//highlight selected square in green
+		key: 'markCell',
+		value: function markCell(x, y, action) {
 			var cellWidth = this.cellWidth,
 			    ctx = this.ctx;
 
 			var coordsX = x * cellWidth;
 			var coordsY = y * cellWidth;
-			ctx.strokeStyle = 'limegreen';
+			if (action === "highlight") {
+				this.availableMoves.push([x, y]);
+				ctx.strokeStyle = 'lightblue';
+			} else if (action === "select") {
+				this.cellSelected = [x, y];
+				this.highlightMoves(x, y);
+				ctx.strokeStyle = 'limegreen';
+			}
+			// push dimensions to availableMoves
 			ctx.beginPath();
 			ctx.moveTo(coordsX, coordsY);
 			ctx.lineTo(coordsX + cellWidth, coordsY);
@@ -128,8 +148,6 @@ var Board = function () {
 			ctx.lineTo(coordsX, coordsY);
 			ctx.lineWidth = 3;
 			ctx.stroke();
-			this.cellSelected = [x, y];
-			this.highlightMoves(x, y);
 		}
 	}, {
 		key: 'highlightMoves',
@@ -140,13 +158,23 @@ var Board = function () {
 
 			var cellsToEvaluate = [[x - 1, y - 1], [x + 1, y - 1]];
 
+			// evaluate possible move cells to discern legal moves
 			cellsToEvaluate.forEach(function (cell) {
 				switch (board[cell[1]][cell[0]]) {
+					// empty cell: can move	
 					case 0:
-						_this2.highlightCell.apply(_this2, _toConsumableArray(cell));
+						_this2.markCell.apply(_this2, _toConsumableArray(cell).concat(["highlight"]));
 						break;
+					// enemy piece: can skip
 					case 'R':
-						_this2.highlightMoves.apply(_this2, _toConsumableArray(cell));
+						var jumpCell;
+						if (cell[0] < x) {
+							jumpCell = [cell[0] - 1, cell[1] - 1];
+						} else {
+							jumpCell = [cell[0] + 1, cell[1] - 1];
+						}
+						if (board[jumpCell[1]] === undefined || board[jumpCell[1]][jumpCell[0]] === 'R') break;
+						_this2.highlightCell.apply(_this2, _toConsumableArray(jumpCell));
 						break;
 				}
 			});
@@ -229,7 +257,7 @@ var Board = function () {
 			var cellWidth = this.cellWidth;
 
 
-			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 'R', 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
 
 			this.drawPieces();
 		}
