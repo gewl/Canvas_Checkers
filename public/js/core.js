@@ -406,6 +406,7 @@ var Game = function () {
 	}, {
 		key: 'movePiece',
 		value: function movePiece(originX, originY, destinationX, destinationY) {
+			this.availableMoves = [];
 			this.gameState[destinationY][destinationX] = 'B';
 			this.gameState[originY][originX] = 0;
 			var distanceTraveled = Math.abs(destinationY - originY);
@@ -417,12 +418,21 @@ var Game = function () {
 				this.jumpCell = [destinationX, destinationY];
 				this.hasJumped = true;
 			}
-			this.board.drawBoard();
-			if (this.hasJumped && this.highlightMoves.apply(this, _toConsumableArray(this.jumpCell))) {
-				this.markCell.apply(this, _toConsumableArray(this.jumpCell).concat(["select"]));
-			} else {
+
+			if (!this.hasJumped || !this.selectCell.apply(this, _toConsumableArray(this.jumpCell))) {
 				this.doneMoving = true;
+				this.cellSelected = [];
+				this.availableMoves = [];
 			}
+
+			this.board.drawBoard();
+
+			// if (!this.hasJumped || !this.selectCell(...this.jumpCell)) {
+			// 	this.doneMoving = true
+			// 	this.markCell(...this.jumpCell, "select")
+			// } else {
+			// 	this.doneMoving = true
+			// }
 		}
 	}, {
 		key: 'selectCell',
@@ -441,6 +451,7 @@ var Game = function () {
 			cellsToEvaluate.forEach(function (cell) {
 				var testX = cell[0];
 				var testY = cell[1];
+				console.log(gameState[testY][testX]);
 				switch (gameState[testY][testX]) {
 					// empty cell: can move	
 					case 0:
@@ -455,7 +466,7 @@ var Game = function () {
 							jumpCell = [testX + 1, testY - 1];
 						}
 						if (gameState[jumpCell[1]] != undefined && gameState[jumpCell[1]][jumpCell[0]] === 0) {
-							_this.availableMoves.push([testX, testY]);
+							_this.availableMoves.push([jumpCell[0], jumpCell[1]]);
 							anyJumpableSquares = true;
 						}
 						break;
