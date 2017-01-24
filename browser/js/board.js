@@ -1,4 +1,5 @@
 import Piece from './piece';
+import Game from './game';
 import _ from 'lodash';
 
 export default class Board {
@@ -36,64 +37,51 @@ export default class Board {
 	}
 
 	getMouse(event) {
-		let { canvas, availableMoves, cellSelected, hasJumped, jumpCell, doneMoving } = this, offsetX = 0, offsetY = 0, mx, my;
+		// let { canvas, availableMoves, cellSelected, hasJumped, jumpCell, doneMoving } = this, offsetX = 0, offsetY = 0, mx, my;
 
 		// click coordinate
 		let x = Math.floor( event.offsetX / 80 )
 		let y = Math.floor( event.offsetY / 80 )
-		// console.log('break')
-		// console.log(hasJumped)
-		// console.log(doneMoving)
-		// console.log(_.isEqual([x, y], jumpCell))
 
-		// if selected valid piece to move, highlight square;
-		if (this.board[y][x] === 'B' && !cellSelected && !hasJumped && !doneMoving) {
-			this.markCell(x, y, "select")
-		// if selected available square to move selected to,
-		// move piece & redraw
-		} else if (hasJumped && !doneMoving && _.isEqual([x, y], jumpCell)) {
-			this.markCell(x, y, "select")
-		} else if ( availableMoves.some( coords => _.isEqual(coords, [x,y]) ) ) {
-			this.movePiece( cellSelected[0], cellSelected[1], x, y )
-		// else, dehighlight/deselect
-		} else {
-			this.redrawBoard()
-		}
+		this.game.evaluateClick(x, y)
+
+		this.drawBoard()
+	
+		// if (action === "select") {
+		// 	this.markCell(x, y, action)
+		// } else if (action === "move") {
+		// 	this.movePiece( cellSelected[0], cellSelected[1], x, y )		
+		// } else {
+		// 	this.redrawBoard()
+		// }
 	}
 
-	movePiece(originX, originY, destinationX, destinationY) {
-		this.board[destinationY][destinationX] = 'B'
-		this.board[originY][originX] = 0
-		let distanceTraveled = Math.abs(destinationY - originY)
-		// if piece traveled further than one row, delete the pieces it passed over
-		if (distanceTraveled > 1) {
-			let jumpedX = ( originX + destinationX )/2
-			let jumpedY = ( originY + destinationY )/2
-			this.board[jumpedY][jumpedX] = 0
-			this.jumpCell = [destinationX, destinationY]
-			this.hasJumped = true;
-		}
-		this.redrawBoard();
-		if (this.hasJumped && this.highlightMoves(...this.jumpCell)) {
-			this.markCell(...this.jumpCell, "select")
-		} else {
-			this.doneMoving = true
-		}
-	}
+	// movePiece(originX, originY, destinationX, destinationY) {
+	// 	this.board[destinationY][destinationX] = 'B'
+	// 	this.board[originY][originX] = 0
+	// 	let distanceTraveled = Math.abs(destinationY - originY)
+	// 	// if piece traveled further than one row, delete the pieces it passed over
+	// 	if (distanceTraveled > 1) {
+	// 		let jumpedX = ( originX + destinationX )/2
+	// 		let jumpedY = ( originY + destinationY )/2
+	// 		this.board[jumpedY][jumpedX] = 0
+	// 		this.jumpCell = [destinationX, destinationY]
+	// 		this.hasJumped = true;
+	// 	}
+	// 	this.redrawBoard();
+	// 	if (this.hasJumped && this.highlightMoves(...this.jumpCell)) {
+	// 		this.markCell(...this.jumpCell, "select")
+	// 	} else {
+	// 		this.doneMoving = true
+	// 	}
+	// }
 
 	// all-purpose function for highlighting cell
-	markCell(x, y, action) {
+	markCell(x, y, color) {
 		let { cellWidth, ctx } = this
 		let coordsX = x * cellWidth
 		let coordsY = y * cellWidth
-		if (action === "highlight")	 {
-			this.availableMoves.push([x, y])
-			ctx.strokeStyle = 'lightblue'
-		} else if (action === "select") {
-			this.cellSelected = [x, y];
-			this.highlightMoves(x, y)
-			ctx.strokeStyle = 'limegreen'
-		}
+		ctx.strokeStyle = color
 		// push dimensions to availableMoves
 		ctx.beginPath()
 		ctx.moveTo(coordsX, coordsY)
@@ -105,40 +93,40 @@ export default class Board {
 		ctx.stroke()
 	}
 
-	highlightMoves(x, y) {
-		let { board } = this
-		let cellsToEvaluate = [
-			[ x-1, y-1 ],
-			[ x+1, y-1 ]
-		]
+	// highlightMoves(x, y) {
+	// 	let { board } = this
+	// 	let cellsToEvaluate = [
+	// 		[ x-1, y-1 ],
+	// 		[ x+1, y-1 ]
+	// 	]
 
-		let anyJumpableSquares = false
+	// 	let anyJumpableSquares = false
 		
-		// evaluate possible move cells to discern legal moves
-		cellsToEvaluate.forEach(cell => {
-			switch ( board[ cell[1] ][ cell[0] ] ) {
-				// empty cell: can move	
-				case 0:
-					this.markCell(...cell, "highlight");
-					break;
-				// enemy piece: can skip
-				case 'R':
-					var jumpCell
-					if ( cell[0] < x) {
-						jumpCell = [ cell[0] - 1, cell[1] - 1 ]
-					} else {
-						jumpCell = [ cell[0] + 1, cell[1] - 1 ]
-					}
-					if (board[ jumpCell[1]] != undefined && board[ jumpCell[1] ][ jumpCell[0] ] === 0) {
-						this.highlightCell(...jumpCell);
-						anyJumpableSquares = true;
-					}
-					break;
-			}
-		})
+	// 	// evaluate possible move cells to discern legal moves
+	// 	cellsToEvaluate.forEach(cell => {
+	// 		switch ( board[ cell[1] ][ cell[0] ] ) {
+	// 			// empty cell: can move	
+	// 			case 0:
+	// 				this.markCell(...cell, "highlight");
+	// 				break;
+	// 			// enemy piece: can skip
+	// 			case 'R':
+	// 				var jumpCell
+	// 				if ( cell[0] < x) {
+	// 					jumpCell = [ cell[0] - 1, cell[1] - 1 ]
+	// 				} else {
+	// 					jumpCell = [ cell[0] + 1, cell[1] - 1 ]
+	// 				}
+	// 				if (board[ jumpCell[1]] != undefined && board[ jumpCell[1] ][ jumpCell[0] ] === 0) {
+	// 					this.highlightCell(...jumpCell);
+	// 					anyJumpableSquares = true;
+	// 				}
+	// 				break;
+	// 		}
+	// 	})
 
-		return anyJumpableSquares;
-	}
+	// 	return anyJumpableSquares;
+	// }
 
 	highlightCell(x, y) {
 		//highlight selected square in blue
@@ -155,16 +143,16 @@ export default class Board {
 		ctx.lineWidth = 3
 		ctx.stroke()
 		// push dimensions to availableMoves
-		this.availableMoves.push([x, y])
+		// this.availableMoves.push([x, y])
 	}
 
-	getBoard() {
-		return this.board
-	}
+	// getBoard() {
+	// 	return this.board
+	// }
 
-	setBoard(board) {
-		this.board = board
-	}
+	// setBoard(board) {
+	// 	this.board = board
+	// }
 
 	drawPiece(color, x, y) {
 		let { cellWidth, ctx } = this
@@ -176,10 +164,10 @@ export default class Board {
 		ctx.stroke();
 	}
 
-	drawPieces() {
+	drawPieces(gameState) {
 		let { cellWidth, ctx } = this
 
-		this.board.forEach(( row, y ) => {
+		gameState.forEach(( row, y ) => {
 			row.forEach(( square, x ) => {
 				if (square === 'R') {
 					this.drawPiece('red', x * cellWidth, y * cellWidth)
@@ -190,27 +178,50 @@ export default class Board {
 		})
 	}
 
-	redrawBoard() {
+	passGame(game) {
+		this.game = game
+	}
+
+	drawBoard() {
+		let { game } = this
+
 		this.ctx.clearRect(0, 0, this.boardWidth, this.boardWidth)
+		let selectedCell = game.getSelected()
+		let availableMoves = game.getMoves()
+		let gameState = game.getState()
+		
 		this.render()
-		this.drawPieces()
-		this.cellSelected = false
-		this.availableMoves = []
+		this.drawPieces(gameState)
+		if (selectedCell) {
+			let x = selectedCell[0]
+			let y = selectedCell[1]
+			this.markCell(x, y, 'limegreen')
+		}
+
+		if (availableMoves) {
+			availableMoves.forEach(cell => {
+				let x = cell[0]
+				let y = cell[1]
+				this.markCell(x, y, 'lightblue')
+			})
+		}
+		// this.cellSelected = false
+		// this.availableMoves = []
 	}
 
 	resetPieces() {
 		let { cellWidth } = this
 
-		this.board = [
-			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
-			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
-			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
-			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
-			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
-			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
-		]
+// 		this.board = [
+// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
+// 			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
+// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
+// 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
+// 			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
+// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
+// 			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
+// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
+// 		]
 
 		this.drawPieces()
 	}

@@ -1,5 +1,6 @@
 import Board from './board'
 import Piece from './piece'
+import Game from './game'
 
 let board = new Board()
 board.render()
@@ -7,6 +8,6 @@ board.render()
 let socket = io.connect('http://localhost:4040')
 
 socket.on('gameStart', () => {
-	board.resetPieces()
+	let game = new Game(board)
 })
 

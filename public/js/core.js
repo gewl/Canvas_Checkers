@@ -9,6 +9,10 @@ var _piece = require('./piece');
 
 var _piece2 = _interopRequireDefault(_piece);
 
+var _game = require('./game');
+
+var _game2 = _interopRequireDefault(_game);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var board = new _board2.default();
@@ -17,10 +21,10 @@ board.render();
 var socket = io.connect('http://localhost:4040');
 
 socket.on('gameStart', function () {
-	board.resetPieces();
+	var game = new _game2.default(board);
 });
 
-},{"./board":2,"./piece":3}],2:[function(require,module,exports){
+},{"./board":2,"./game":3,"./piece":4}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -33,13 +37,15 @@ var _piece = require('./piece');
 
 var _piece2 = _interopRequireDefault(_piece);
 
+var _game = require('./game');
+
+var _game2 = _interopRequireDefault(_game);
+
 var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -84,82 +90,56 @@ var Board = function () {
 	_createClass(Board, [{
 		key: 'getMouse',
 		value: function getMouse(event) {
-			var canvas = this.canvas,
-			    availableMoves = this.availableMoves,
-			    cellSelected = this.cellSelected,
-			    hasJumped = this.hasJumped,
-			    jumpCell = this.jumpCell,
-			    doneMoving = this.doneMoving,
-			    offsetX = 0,
-			    offsetY = 0,
-			    mx = void 0,
-			    my = void 0;
+			// let { canvas, availableMoves, cellSelected, hasJumped, jumpCell, doneMoving } = this, offsetX = 0, offsetY = 0, mx, my;
 
 			// click coordinate
-
 			var x = Math.floor(event.offsetX / 80);
 			var y = Math.floor(event.offsetY / 80);
-			// console.log('break')
-			// console.log(hasJumped)
-			// console.log(doneMoving)
-			// console.log(_.isEqual([x, y], jumpCell))
 
-			// if selected valid piece to move, highlight square;
-			if (this.board[y][x] === 'B' && !cellSelected && !hasJumped && !doneMoving) {
-				this.markCell(x, y, "select");
-				// if selected available square to move selected to,
-				// move piece & redraw
-			} else if (hasJumped && !doneMoving && _lodash2.default.isEqual([x, y], jumpCell)) {
-				this.markCell(x, y, "select");
-			} else if (availableMoves.some(function (coords) {
-				return _lodash2.default.isEqual(coords, [x, y]);
-			})) {
-				this.movePiece(cellSelected[0], cellSelected[1], x, y);
-				// else, dehighlight/deselect
-			} else {
-				this.redrawBoard();
-			}
+			this.game.evaluateClick(x, y);
+
+			this.drawBoard();
+
+			// if (action === "select") {
+			// 	this.markCell(x, y, action)
+			// } else if (action === "move") {
+			// 	this.movePiece( cellSelected[0], cellSelected[1], x, y )		
+			// } else {
+			// 	this.redrawBoard()
+			// }
 		}
-	}, {
-		key: 'movePiece',
-		value: function movePiece(originX, originY, destinationX, destinationY) {
-			this.board[destinationY][destinationX] = 'B';
-			this.board[originY][originX] = 0;
-			var distanceTraveled = Math.abs(destinationY - originY);
-			// if piece traveled further than one row, delete the pieces it passed over
-			if (distanceTraveled > 1) {
-				var jumpedX = (originX + destinationX) / 2;
-				var jumpedY = (originY + destinationY) / 2;
-				this.board[jumpedY][jumpedX] = 0;
-				this.jumpCell = [destinationX, destinationY];
-				this.hasJumped = true;
-			}
-			this.redrawBoard();
-			if (this.hasJumped && this.highlightMoves.apply(this, _toConsumableArray(this.jumpCell))) {
-				this.markCell.apply(this, _toConsumableArray(this.jumpCell).concat(["select"]));
-			} else {
-				this.doneMoving = true;
-			}
-		}
+
+		// movePiece(originX, originY, destinationX, destinationY) {
+		// 	this.board[destinationY][destinationX] = 'B'
+		// 	this.board[originY][originX] = 0
+		// 	let distanceTraveled = Math.abs(destinationY - originY)
+		// 	// if piece traveled further than one row, delete the pieces it passed over
+		// 	if (distanceTraveled > 1) {
+		// 		let jumpedX = ( originX + destinationX )/2
+		// 		let jumpedY = ( originY + destinationY )/2
+		// 		this.board[jumpedY][jumpedX] = 0
+		// 		this.jumpCell = [destinationX, destinationY]
+		// 		this.hasJumped = true;
+		// 	}
+		// 	this.redrawBoard();
+		// 	if (this.hasJumped && this.highlightMoves(...this.jumpCell)) {
+		// 		this.markCell(...this.jumpCell, "select")
+		// 	} else {
+		// 		this.doneMoving = true
+		// 	}
+		// }
 
 		// all-purpose function for highlighting cell
 
 	}, {
 		key: 'markCell',
-		value: function markCell(x, y, action) {
+		value: function markCell(x, y, color) {
 			var cellWidth = this.cellWidth,
 			    ctx = this.ctx;
 
 			var coordsX = x * cellWidth;
 			var coordsY = y * cellWidth;
-			if (action === "highlight") {
-				this.availableMoves.push([x, y]);
-				ctx.strokeStyle = 'lightblue';
-			} else if (action === "select") {
-				this.cellSelected = [x, y];
-				this.highlightMoves(x, y);
-				ctx.strokeStyle = 'limegreen';
-			}
+			ctx.strokeStyle = color;
 			// push dimensions to availableMoves
 			ctx.beginPath();
 			ctx.moveTo(coordsX, coordsY);
@@ -170,42 +150,42 @@ var Board = function () {
 			ctx.lineWidth = 3;
 			ctx.stroke();
 		}
-	}, {
-		key: 'highlightMoves',
-		value: function highlightMoves(x, y) {
-			var _this2 = this;
 
-			var board = this.board;
+		// highlightMoves(x, y) {
+		// 	let { board } = this
+		// 	let cellsToEvaluate = [
+		// 		[ x-1, y-1 ],
+		// 		[ x+1, y-1 ]
+		// 	]
 
-			var cellsToEvaluate = [[x - 1, y - 1], [x + 1, y - 1]];
+		// 	let anyJumpableSquares = false
 
-			var anyJumpableSquares = false;
+		// 	// evaluate possible move cells to discern legal moves
+		// 	cellsToEvaluate.forEach(cell => {
+		// 		switch ( board[ cell[1] ][ cell[0] ] ) {
+		// 			// empty cell: can move	
+		// 			case 0:
+		// 				this.markCell(...cell, "highlight");
+		// 				break;
+		// 			// enemy piece: can skip
+		// 			case 'R':
+		// 				var jumpCell
+		// 				if ( cell[0] < x) {
+		// 					jumpCell = [ cell[0] - 1, cell[1] - 1 ]
+		// 				} else {
+		// 					jumpCell = [ cell[0] + 1, cell[1] - 1 ]
+		// 				}
+		// 				if (board[ jumpCell[1]] != undefined && board[ jumpCell[1] ][ jumpCell[0] ] === 0) {
+		// 					this.highlightCell(...jumpCell);
+		// 					anyJumpableSquares = true;
+		// 				}
+		// 				break;
+		// 		}
+		// 	})
 
-			// evaluate possible move cells to discern legal moves
-			cellsToEvaluate.forEach(function (cell) {
-				switch (board[cell[1]][cell[0]]) {
-					// empty cell: can move	
-					case 0:
-						_this2.markCell.apply(_this2, _toConsumableArray(cell).concat(["highlight"]));
-						break;
-					// enemy piece: can skip
-					case 'R':
-						var jumpCell;
-						if (cell[0] < x) {
-							jumpCell = [cell[0] - 1, cell[1] - 1];
-						} else {
-							jumpCell = [cell[0] + 1, cell[1] - 1];
-						}
-						if (board[jumpCell[1]] != undefined && board[jumpCell[1]][jumpCell[0]] === 0) {
-							_this2.highlightCell.apply(_this2, _toConsumableArray(jumpCell));
-							anyJumpableSquares = true;
-						}
-						break;
-				}
-			});
+		// 	return anyJumpableSquares;
+		// }
 
-			return anyJumpableSquares;
-		}
 	}, {
 		key: 'highlightCell',
 		value: function highlightCell(x, y) {
@@ -225,18 +205,17 @@ var Board = function () {
 			ctx.lineWidth = 3;
 			ctx.stroke();
 			// push dimensions to availableMoves
-			this.availableMoves.push([x, y]);
+			// this.availableMoves.push([x, y])
 		}
-	}, {
-		key: 'getBoard',
-		value: function getBoard() {
-			return this.board;
-		}
-	}, {
-		key: 'setBoard',
-		value: function setBoard(board) {
-			this.board = board;
-		}
+
+		// getBoard() {
+		// 	return this.board
+		// }
+
+		// setBoard(board) {
+		// 	this.board = board
+		// }
+
 	}, {
 		key: 'drawPiece',
 		value: function drawPiece(color, x, y) {
@@ -252,39 +231,74 @@ var Board = function () {
 		}
 	}, {
 		key: 'drawPieces',
-		value: function drawPieces() {
-			var _this3 = this;
+		value: function drawPieces(gameState) {
+			var _this2 = this;
 
 			var cellWidth = this.cellWidth,
 			    ctx = this.ctx;
 
 
-			this.board.forEach(function (row, y) {
+			gameState.forEach(function (row, y) {
 				row.forEach(function (square, x) {
 					if (square === 'R') {
-						_this3.drawPiece('red', x * cellWidth, y * cellWidth);
+						_this2.drawPiece('red', x * cellWidth, y * cellWidth);
 					} else if (square === 'B') {
-						_this3.drawPiece('black', x * cellWidth, y * cellWidth);
+						_this2.drawPiece('black', x * cellWidth, y * cellWidth);
 					}
 				});
 			});
 		}
 	}, {
-		key: 'redrawBoard',
-		value: function redrawBoard() {
+		key: 'passGame',
+		value: function passGame(game) {
+			this.game = game;
+		}
+	}, {
+		key: 'drawBoard',
+		value: function drawBoard() {
+			var _this3 = this;
+
+			var game = this.game;
+
+
 			this.ctx.clearRect(0, 0, this.boardWidth, this.boardWidth);
+			var selectedCell = game.getSelected();
+			var availableMoves = game.getMoves();
+			var gameState = game.getState();
+
 			this.render();
-			this.drawPieces();
-			this.cellSelected = false;
-			this.availableMoves = [];
+			this.drawPieces(gameState);
+			if (selectedCell) {
+				var x = selectedCell[0];
+				var y = selectedCell[1];
+				this.markCell(x, y, 'limegreen');
+			}
+
+			if (availableMoves) {
+				availableMoves.forEach(function (cell) {
+					var x = cell[0];
+					var y = cell[1];
+					_this3.markCell(x, y, 'lightblue');
+				});
+			}
+			// this.cellSelected = false
+			// this.availableMoves = []
 		}
 	}, {
 		key: 'resetPieces',
 		value: function resetPieces() {
 			var cellWidth = this.cellWidth;
 
-
-			this.board = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+			// 		this.board = [
+			// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
+			// 			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
+			// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
+			// 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
+			// 			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
+			// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
+			// 			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
+			// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
+			// 		]
 
 			this.drawPieces();
 		}
@@ -326,7 +340,178 @@ var Board = function () {
 
 exports.default = Board;
 
-},{"./piece":3,"lodash":4}],3:[function(require,module,exports){
+},{"./game":3,"./piece":4,"lodash":5}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _board = require('./board');
+
+var _board2 = _interopRequireDefault(_board);
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Game = function () {
+	function Game(board) {
+		_classCallCheck(this, Game);
+
+		// arrangement of pieces/empty cells
+		this.gameState = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+		// if a valid move target has been clicked
+		this.cellSelected = false;
+		// cells that selected piece can move to
+		this.availableMoves = [];
+		// if already jumped this turn, this tracks (and points to) piece that is jumping
+		this.hasJumped = false;
+		this.jumpCell = [];
+		// flip to true when turn is over
+		this.doneMoving = false;
+
+		board.passGame(this);
+		board.drawBoard();
+
+		this.board = board;
+	}
+
+	// simple getters
+
+
+	_createClass(Game, [{
+		key: 'getState',
+		value: function getState() {
+			return this.gameState;
+		}
+	}, {
+		key: 'getSelected',
+		value: function getSelected() {
+			return this.cellSelected;
+		}
+	}, {
+		key: 'getMoves',
+		value: function getMoves() {
+			return this.availableMoves;
+		}
+	}, {
+		key: 'movePiece',
+		value: function movePiece(originX, originY, destinationX, destinationY) {
+			this.gameState[destinationY][destinationX] = 'B';
+			this.gameState[originY][originX] = 0;
+			var distanceTraveled = Math.abs(destinationY - originY);
+			// if piece traveled further than one row, delete the pieces it passed over
+			if (distanceTraveled > 1) {
+				var jumpedX = (originX + destinationX) / 2;
+				var jumpedY = (originY + destinationY) / 2;
+				this.gameState[jumpedY][jumpedX] = 0;
+				this.jumpCell = [destinationX, destinationY];
+				this.hasJumped = true;
+			}
+			this.board.drawBoard();
+			if (this.hasJumped && this.highlightMoves.apply(this, _toConsumableArray(this.jumpCell))) {
+				this.markCell.apply(this, _toConsumableArray(this.jumpCell).concat(["select"]));
+			} else {
+				this.doneMoving = true;
+			}
+		}
+	}, {
+		key: 'selectCell',
+		value: function selectCell(x, y) {
+			var _this = this;
+
+			this.cellSelected = [x, y];
+			var gameState = this.gameState;
+
+
+			var cellsToEvaluate = [[x - 1, y - 1], [x + 1, y - 1]];
+
+			var anyJumpableSquares = false;
+
+			// evaluate possible move cells to discern legal moves
+			cellsToEvaluate.forEach(function (cell) {
+				var testX = cell[0];
+				var testY = cell[1];
+				switch (gameState[testY][testX]) {
+					// empty cell: can move	
+					case 0:
+						_this.availableMoves.push([testX, testY]);
+						break;
+					// enemy piece: can skip
+					case 'R':
+						var jumpCell;
+						if (testX < x) {
+							jumpCell = [testX - 1, testY - 1];
+						} else {
+							jumpCell = [testX + 1, testY - 1];
+						}
+						if (gameState[jumpCell[1]] != undefined && gameState[jumpCell[1]][jumpCell[0]] === 0) {
+							_this.availableMoves.push([testX, testY]);
+							anyJumpableSquares = true;
+						}
+						break;
+				}
+			});
+
+			return anyJumpableSquares;
+		}
+	}, {
+		key: 'evaluateClick',
+		value: function evaluateClick(x, y) {
+			var availableMoves = this.availableMoves,
+			    cellSelected = this.cellSelected,
+			    hasJumped = this.hasJumped,
+			    jumpCell = this.jumpCell,
+			    doneMoving = this.doneMoving,
+			    offsetX = 0,
+			    offsetY = 0,
+			    mx = void 0,
+			    my = void 0;
+
+			// if selected valid piece to move, highlight square;
+
+			if (this.gameState[y][x] === 'B' && !cellSelected && !hasJumped && !doneMoving) {
+				// action = "select"
+				this.selectCell(x, y);
+				// in case jump made & more jumps available
+			} else if (hasJumped && !doneMoving && _lodash2.default.isEqual([x, y], jumpCell)) {
+				this.selectCell(x, y);
+				// if selected available square to move selected to,
+				// move piece & redraw
+			} else if (availableMoves.some(function (coords) {
+				return _lodash2.default.isEqual(coords, [x, y]);
+			})) {
+				this.movePiece.apply(this, _toConsumableArray(cellSelected).concat([x, y]));
+				// else, dehighlight/deselect
+			} else {
+				this.cellSelected = false;
+				this.availableMoves = [];
+			}
+		}
+	}, {
+		key: 'start',
+		value: function start() {
+			// NOT SURE THIS WORKS: double-check
+			// intended behavior is to restore defaults
+			this.constructor();
+		}
+	}]);
+
+	return Game;
+}();
+
+exports.default = Game;
+
+},{"./board":2,"lodash":5}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -345,7 +530,7 @@ var Piece = function Piece(color, x, y) {
 
 exports.default = Piece;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 (function (global){
 /**
  * @license
