@@ -1,4 +1,3 @@
-import Piece from './piece';
 import Game from './game';
 import _ from 'lodash';
 

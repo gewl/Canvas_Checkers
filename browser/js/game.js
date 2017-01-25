@@ -2,7 +2,7 @@ import Board from './board';
 import _ from 'lodash';
 
 export default class Game {
-	constructor(board) {
+	constructor() {
 		// arrangement of pieces/empty cells
 		this.gameState = [
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
@@ -24,6 +24,7 @@ export default class Game {
 		// flip to true when turn is over
 		this.doneMoving = false;
 
+		let board = new Board()
 		board.passGame(this)
 		board.drawBoard()
 
@@ -88,7 +89,6 @@ export default class Game {
 		cellsToEvaluate.forEach(cell => {
 			let testX = cell[0]
 			let testY = cell[1]
-			console.log( gameState[ testY ][ testX ] )
 			switch ( gameState[ testY ][ testX ] ) {
 				// empty cell: can move	
 				case 0:
