@@ -55,17 +55,6 @@ var Board = function () {
 		// sizing
 		this.boardWidth = 640;
 		this.cellWidth = boardWidth / 8;
-		// arrangement of pieces/empty cells
-		this.board = [];
-		// if a valid move target has been clicked
-		this.cellSelected = false;
-		// cells that selected piece can move to
-		this.availableMoves = [];
-		// if already jumped this turn, this tracks (and points to) piece that is jumping
-		this.hasJumped = false;
-		this.jumpCell = [];
-
-		this.doneMoving = false;
 
 		//event listener for clicks to allow piece movement
 		canvas.addEventListener('mousedown', function (e) {
@@ -78,44 +67,15 @@ var Board = function () {
 	_createClass(Board, [{
 		key: 'getMouse',
 		value: function getMouse(event) {
-			// let { canvas, availableMoves, cellSelected, hasJumped, jumpCell, doneMoving } = this, offsetX = 0, offsetY = 0, mx, my;
-
 			// click coordinate
 			var x = Math.floor(event.offsetX / 80);
 			var y = Math.floor(event.offsetY / 80);
 
+			// pass coordinates to Game method
 			this.game.evaluateClick(x, y);
 
 			this.drawBoard();
-
-			// if (action === "select") {
-			// 	this.markCell(x, y, action)
-			// } else if (action === "move") {
-			// 	this.movePiece( cellSelected[0], cellSelected[1], x, y )		
-			// } else {
-			// 	this.redrawBoard()
-			// }
 		}
-
-		// movePiece(originX, originY, destinationX, destinationY) {
-		// 	this.board[destinationY][destinationX] = 'B'
-		// 	this.board[originY][originX] = 0
-		// 	let distanceTraveled = Math.abs(destinationY - originY)
-		// 	// if piece traveled further than one row, delete the pieces it passed over
-		// 	if (distanceTraveled > 1) {
-		// 		let jumpedX = ( originX + destinationX )/2
-		// 		let jumpedY = ( originY + destinationY )/2
-		// 		this.board[jumpedY][jumpedX] = 0
-		// 		this.jumpCell = [destinationX, destinationY]
-		// 		this.hasJumped = true;
-		// 	}
-		// 	this.redrawBoard();
-		// 	if (this.hasJumped && this.highlightMoves(...this.jumpCell)) {
-		// 		this.markCell(...this.jumpCell, "select")
-		// 	} else {
-		// 		this.doneMoving = true
-		// 	}
-		// }
 
 		// all-purpose function for highlighting cell
 
@@ -128,7 +88,6 @@ var Board = function () {
 			var coordsX = x * cellWidth;
 			var coordsY = y * cellWidth;
 			ctx.strokeStyle = color;
-			// push dimensions to availableMoves
 			ctx.beginPath();
 			ctx.moveTo(coordsX, coordsY);
 			ctx.lineTo(coordsX + cellWidth, coordsY);
@@ -138,42 +97,6 @@ var Board = function () {
 			ctx.lineWidth = 3;
 			ctx.stroke();
 		}
-
-		// highlightMoves(x, y) {
-		// 	let { board } = this
-		// 	let cellsToEvaluate = [
-		// 		[ x-1, y-1 ],
-		// 		[ x+1, y-1 ]
-		// 	]
-
-		// 	let anyJumpableSquares = false
-
-		// 	// evaluate possible move cells to discern legal moves
-		// 	cellsToEvaluate.forEach(cell => {
-		// 		switch ( board[ cell[1] ][ cell[0] ] ) {
-		// 			// empty cell: can move	
-		// 			case 0:
-		// 				this.markCell(...cell, "highlight");
-		// 				break;
-		// 			// enemy piece: can skip
-		// 			case 'R':
-		// 				var jumpCell
-		// 				if ( cell[0] < x) {
-		// 					jumpCell = [ cell[0] - 1, cell[1] - 1 ]
-		// 				} else {
-		// 					jumpCell = [ cell[0] + 1, cell[1] - 1 ]
-		// 				}
-		// 				if (board[ jumpCell[1]] != undefined && board[ jumpCell[1] ][ jumpCell[0] ] === 0) {
-		// 					this.highlightCell(...jumpCell);
-		// 					anyJumpableSquares = true;
-		// 				}
-		// 				break;
-		// 		}
-		// 	})
-
-		// 	return anyJumpableSquares;
-		// }
-
 	}, {
 		key: 'highlightCell',
 		value: function highlightCell(x, y) {
@@ -192,18 +115,7 @@ var Board = function () {
 			ctx.lineTo(coordsX, coordsY);
 			ctx.lineWidth = 3;
 			ctx.stroke();
-			// push dimensions to availableMoves
-			// this.availableMoves.push([x, y])
 		}
-
-		// getBoard() {
-		// 	return this.board
-		// }
-
-		// setBoard(board) {
-		// 	this.board = board
-		// }
-
 	}, {
 		key: 'drawPiece',
 		value: function drawPiece(color, x, y) {
@@ -269,24 +181,12 @@ var Board = function () {
 					_this3.markCell(x, y, 'lightblue');
 				});
 			}
-			// this.cellSelected = false
-			// this.availableMoves = []
 		}
 	}, {
 		key: 'resetPieces',
 		value: function resetPieces() {
 			var cellWidth = this.cellWidth;
 
-			// 		this.board = [
-			// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			// 			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
-			// 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			// 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
-			// 			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
-			// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
-			// 			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
-			// 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
-			// 		]
 
 			this.drawPieces();
 		}
