@@ -14,6 +14,9 @@ const server = app.listen(port, (err) => {
 const io = require('socket.io').listen(server);
 
 io.sockets.on('connection', socket => {
-	console.log(`Socket connected: ${socket.id}`)
-	socket.emit('gameStart')
+	console.log(`Socket connected: ${socket.id}`);
+	socket.emit('gameStart');
+
+	socket.on('clientPassBoard', board => {
+	})
 })

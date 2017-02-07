@@ -7,9 +7,6 @@ var _game2 = _interopRequireDefault(_game);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// let board = new Board()
-// board.render()
-
 var socket = io.connect('http://localhost:4040');
 
 socket.on('gameStart', function () {
@@ -228,7 +225,7 @@ var Board = function () {
 
 exports.default = Board;
 
-},{"./game":3,"lodash":4}],3:[function(require,module,exports){
+},{"./game":3,"lodash":5}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -241,6 +238,10 @@ var _board = require('./board');
 
 var _board2 = _interopRequireDefault(_board);
 
+var _socket = require('./socket');
+
+var _socket2 = _interopRequireDefault(_socket);
+
 var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
@@ -252,7 +253,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Game = function () {
-	function Game() {
+	function Game(socketInstance) {
 		_classCallCheck(this, Game);
 
 		// arrangement of pieces/empty cells
@@ -266,6 +267,8 @@ var Game = function () {
 		this.jumpCell = [];
 		// flip to true when turn is over
 		this.doneMoving = false;
+
+		this.socket = new _socket2.default(socketInstance);
 
 		var board = new _board2.default();
 		board.passGame(this);
@@ -310,18 +313,12 @@ var Game = function () {
 
 			if (!this.hasJumped || !this.selectCell.apply(this, _toConsumableArray(this.jumpCell))) {
 				this.doneMoving = true;
+				this.socket.sendGamestate(this.gameState);
 				this.cellSelected = [];
 				this.availableMoves = [];
 			}
 
 			this.board.drawBoard();
-
-			// if (!this.hasJumped || !this.selectCell(...this.jumpCell)) {
-			// 	this.doneMoving = true
-			// 	this.markCell(...this.jumpCell, "select")
-			// } else {
-			// 	this.doneMoving = true
-			// }
 		}
 	}, {
 		key: 'selectCell',
@@ -410,7 +407,37 @@ var Game = function () {
 
 exports.default = Game;
 
-},{"./board":2,"lodash":4}],4:[function(require,module,exports){
+},{"./board":2,"./socket":4,"lodash":5}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Socket = function () {
+	function Socket(socket) {
+		_classCallCheck(this, Socket);
+
+		this.socket = socket;
+	}
+
+	_createClass(Socket, [{
+		key: 'sendGamestate',
+		value: function sendGamestate(gameState) {
+			this.socket.emit('clientPassBoard', gameState);
+		}
+	}]);
+
+	return Socket;
+}();
+
+exports.default = Socket;
+
+},{}],5:[function(require,module,exports){
 (function (global){
 /**
  * @license

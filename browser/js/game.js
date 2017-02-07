@@ -1,8 +1,9 @@
 import Board from './board';
+import Socket from './socket';
 import _ from 'lodash';
 
 export default class Game {
-	constructor() {
+	constructor(socketInstance) {
 		// arrangement of pieces/empty cells
 		this.gameState = [
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
@@ -23,6 +24,8 @@ export default class Game {
 		this.jumpCell = [];
 		// flip to true when turn is over
 		this.doneMoving = false;
+
+		this.socket = new Socket(socketInstance);
 
 		let board = new Board()
 		board.passGame(this)
@@ -60,18 +63,12 @@ export default class Game {
 
 		if (!this.hasJumped || !this.selectCell(...this.jumpCell)) {
 			this.doneMoving = true;
+			this.socket.sendGamestate(this.gameState)
 			this.cellSelected = []
 			this.availableMoves = []
 		}
 
 		this.board.drawBoard();
-
-		// if (!this.hasJumped || !this.selectCell(...this.jumpCell)) {
-		// 	this.doneMoving = true
-		// 	this.markCell(...this.jumpCell, "select")
-		// } else {
-		// 	this.doneMoving = true
-		// }
 	}
 
 	selectCell(x, y) {
