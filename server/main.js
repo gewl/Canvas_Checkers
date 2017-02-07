@@ -3,6 +3,7 @@
 import chalk from 'chalk';
 import express from 'express';
 const path = require('path');
+import SocketServer from './sockets';
 
 const app = require('./app').default()
 
@@ -11,12 +12,6 @@ const server = app.listen(port, (err) => {
 	if (err) throw err;
 	console.log(chalk.cyan(`Server listening on port ${port}.`))
 });
-const io = require('socket.io').listen(server);
 
-io.sockets.on('connection', socket => {
-	console.log(`Socket connected: ${socket.id}`);
-	socket.emit('gameStart');
-
-	socket.on('clientPassBoard', board => {
-	})
-})
+//instantiate socketServer which handles io
+const socketServer = new SocketServer(server)
