@@ -5,13 +5,15 @@ export default class Board {
 	constructor(properties) {
 		// create canvas
 		const canvas = document.createElement("canvas")
+		// maintaining reference to HTML5 canvas for rendering
+		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d");
+
+		// setting dimensions
 		let boardWidth = 640;
 		canvas.width = boardWidth
 		canvas.height = boardWidth
 
-		// maintaining reference to HTML5 canvas for rendering
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
 		// sizing
 		this.boardWidth = 640;
 		this.cellWidth = boardWidth/8;
@@ -151,5 +153,9 @@ export default class Board {
 			ctx.lineWidth = 2
 			ctx.stroke()
 		}
+	}
+
+	deleteBoard() {
+		document.body.removeChild(this.canvas)
 	}
 }

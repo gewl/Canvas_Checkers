@@ -1,8 +1,12 @@
 import Game from './game'
 
 let socket = io.connect('http://localhost:4040')
+let game = null
 
 socket.on('gameStart', () => {
-	let game = new Game(socket)
+	if (game) {
+		game.wipe()
+	}
+	game = new Game(socket)
 })
 

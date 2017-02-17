@@ -8,9 +8,13 @@ var _game2 = _interopRequireDefault(_game);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var socket = io.connect('http://localhost:4040');
+var game = null;
 
 socket.on('gameStart', function () {
-	var game = new _game2.default(socket);
+	if (game) {
+		game.wipe();
+	}
+	game = new _game2.default(socket);
 });
 
 },{"./game":3}],2:[function(require,module,exports){
@@ -42,13 +46,15 @@ var Board = function () {
 
 		// create canvas
 		var canvas = document.createElement("canvas");
+		// maintaining reference to HTML5 canvas for rendering
+		this.canvas = canvas;
+		this.ctx = canvas.getContext("2d");
+
+		// setting dimensions
 		var boardWidth = 640;
 		canvas.width = boardWidth;
 		canvas.height = boardWidth;
 
-		// maintaining reference to HTML5 canvas for rendering
-		this.canvas = canvas;
-		this.ctx = canvas.getContext("2d");
 		// sizing
 		this.boardWidth = 640;
 		this.cellWidth = boardWidth / 8;
@@ -217,6 +223,11 @@ var Board = function () {
 				ctx.lineWidth = 2;
 				ctx.stroke();
 			}
+		}
+	}, {
+		key: 'deleteBoard',
+		value: function deleteBoard() {
+			document.body.removeChild(this.canvas);
 		}
 	}]);
 
@@ -393,12 +404,14 @@ var Game = function () {
 				this.availableMoves = [];
 			}
 		}
+
+		// used in case of redundant game starting from server
+		// which causes undesirable board duplicates
+
 	}, {
-		key: 'start',
-		value: function start() {
-			// NOT SURE THIS WORKS: double-check
-			// intended behavior is to restore defaults
-			this.constructor();
+		key: 'wipe',
+		value: function wipe() {
+			this.board.deleteBoard();
 		}
 	}]);
 

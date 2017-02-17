@@ -131,9 +131,9 @@ export default class Game {
 		}
 	}
 
-	start() {
-		// NOT SURE THIS WORKS: double-check
-		// intended behavior is to restore defaults
-		this.constructor()
+	// used in case of redundant game starting from server
+	// which causes undesirable board duplicates
+	wipe() {
+		this.board.deleteBoard()
 	}
 }
