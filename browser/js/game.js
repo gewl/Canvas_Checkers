@@ -25,7 +25,7 @@ export default class Game {
 		// flip to true when turn is over
 		this.doneMoving = false;
 
-		this.socket = new Socket(socketInstance);
+		this.socket = new Socket(socketInstance, this);
 
 		let board = new Board()
 		board.passGame(this)
@@ -129,6 +129,13 @@ export default class Game {
 			this.cellSelected = false
 			this.availableMoves = [];
 		}
+	}
+
+	makeServerMove(newState) {
+		this.gameState = newState;
+		this.doneMoving = false;
+		this.hasJumped = false;
+		this.board.drawBoard()	
 	}
 
 	// used in case of redundant game starting from server

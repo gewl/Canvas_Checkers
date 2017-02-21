@@ -279,7 +279,7 @@ var Game = function () {
 		// flip to true when turn is over
 		this.doneMoving = false;
 
-		this.socket = new _socket2.default(socketInstance);
+		this.socket = new _socket2.default(socketInstance, this);
 
 		var board = new _board2.default();
 		board.passGame(this);
@@ -404,6 +404,14 @@ var Game = function () {
 				this.availableMoves = [];
 			}
 		}
+	}, {
+		key: 'makeServerMove',
+		value: function makeServerMove(newState) {
+			this.gameState = newState;
+			this.doneMoving = false;
+			this.hasJumped = false;
+			this.board.drawBoard();
+		}
 
 		// used in case of redundant game starting from server
 		// which causes undesirable board duplicates
@@ -432,10 +440,18 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Socket = function () {
-	function Socket(socket) {
+	function Socket(socket, game) {
+		var _this = this;
+
 		_classCallCheck(this, Socket);
 
 		this.socket = socket;
+		this.game = game;
+		socket.on('serverPassBoard', function (board) {
+			setTimeout(function () {
+				return _this.game.makeServerMove(board);
+			}, 1000);
+		});
 	}
 
 	_createClass(Socket, [{

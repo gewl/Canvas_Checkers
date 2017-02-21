@@ -24,14 +24,16 @@ export default class SocketServer {
 				let row = board[i]
 				for (let j = 0; j < row.length; j++) {
 					if (row[j] === 'R') {
-						movablePieceCoords.push([j, i]);
-						let testJumpRow = i+1
-						if (board[testJumpRow]) {
-							if (board[testJumpRow][j-1] === 'B' && board[testJumpRow + 1] && board[testJumpRow + 1][j - 2] === 0) {
+						let testMoveRow = i+1
+						if (board[testMoveRow] && (board[testMoveRow][j-1] === 0 || board[testMoveRow][j+1] === 0)) {
+							movablePieceCoords.push([j, i]);
+						}
+						if (board[testMoveRow]) {
+							if (board[testMoveRow][j-1] === 'B' && board[testMoveRow + 1] && board[testMoveRow + 1][j - 2] === 0) {
 								jumpablePieceCoords.push([j, i]);
 								placeToJumpCoords.push([j + 2, i - 2])
 							}
-							if (board[testJumpRow][j+1] === 'B' && board[testJumpRow + 1] && board[testJumpRow + 1][j + 2] === 0) {
+							if (board[testMoveRow][j+1] === 'B' && board[testMoveRow + 1] && board[testMoveRow + 1][j + 2] === 0) {
 								jumpablePieceCoords.push([j, i]);
 								placeToJumpCoords.push([j + 2, i + 2])
 							}
@@ -40,9 +42,26 @@ export default class SocketServer {
 				}
 			}
 
-			console.log(movablePieceCoords)
-			console.log(jumpablePieceCoords)
-			console.log(placeToJumpCoords)
+			if (jumpablePieceCoords.length) {
+				let pieceToMove = randomIndex(jumpablePieceCoords)
+
+				let originX = jumpablePieceCoords[pieceToMove][0]
+				let originY = jumpablePieceCoords[pieceToMove][1]
+				let destinationX = placeToJumpCoords[pieceToMove][0]
+				let destinationY = placeToJumpCoords[pieceToMove][1]
+
+				board[originY][originX] = 0;
+				board[destinationY][destinationX] = 'R';
+
+				let jumpedX = ( originX + destinationX )/2
+				let jumpedY = ( originY + destinationY )/2
+				board[jumpedY][jumpedX] = 0;
+			}
+			socket.emit('serverPassBoard', board)
 		})
 	}
+}
+
+var randomIndex = function(arr) {
+	return parseInt(Math.random() * (arr.length-1))
 }
