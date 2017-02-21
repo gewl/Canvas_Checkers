@@ -268,7 +268,7 @@ var Game = function () {
 		_classCallCheck(this, Game);
 
 		// arrangement of pieces/empty cells
-		this.gameState = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+		this.gameState = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 0, 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
 		// if a valid move target has been clicked
 		this.cellSelected = false;
 		// cells that selected piece can move to

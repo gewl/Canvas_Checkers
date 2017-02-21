@@ -12,7 +12,7 @@ export default class Game {
 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
-			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
+			[ 0, 'B', 0, 0, 0, 'B', 0, 'B' ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
 		]
 		// if a valid move target has been clicked
