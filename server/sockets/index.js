@@ -52,8 +52,6 @@ export default class SocketServer {
 			if (jumpablePieceCoords.length) {
 				// if any pieces can be jumped, chooses a random available jump and executes it by editing the board
 				let pieceToMove = randomIndex(jumpablePieceCoords)
-				console.log(jumpablePieceCoords[pieceToMove])
-				console.log(placeToJumpCoords[pieceToMove])
 
 				let originX = jumpablePieceCoords[pieceToMove][0]
 				let originY = jumpablePieceCoords[pieceToMove][1]
@@ -94,7 +92,15 @@ export default class SocketServer {
 				}
 			}
 
-			socket.emit('serverPassBoard', board)
+			let winner = checkBoardForWinner(board)
+
+			if (!winner) {
+				socket.emit('serverPassBoard', board)
+			} else if (winner === "black") {
+				socket.emit('winEvent', board)
+			} else if (winner === "red") {
+				socket.emit('loseEvent', board)
+			}
 		})
 	}
 }
@@ -103,6 +109,16 @@ var executeMove = function(board, origX, origY, destX, destY) {
 	board[origY][origX] = 0;
 	board[destY][destX] = 'R';
 	return board
+}
+
+var checkBoardForWinner = function(board) {
+	if (!board.some(row => row.some(ele => ele === 'R'))) {
+		return "black"
+	} else if (!board.some(row => row.some(ele => ele === 'B'))) {
+		return "red"
+	} else {
+		return false
+	}
 }
 
 var randomIndex = function(arr) {

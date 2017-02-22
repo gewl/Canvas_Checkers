@@ -194,6 +194,26 @@ var Board = function () {
 			this.drawPieces();
 		}
 	}, {
+		key: 'drawWinMessage',
+		value: function drawWinMessage() {
+			var ctx = this.ctx;
+
+			ctx.font = '48px serif';
+			ctx.fillStyle = 'black';
+			ctx.fillText('You win!', 231, 310);
+			var text = ctx.measureText('You win!');
+		}
+	}, {
+		key: 'drawLoseMessage',
+		value: function drawLoseMessage() {
+			var ctx = this.ctx;
+
+			ctx.font = '48px serif';
+			ctx.fillStyle = 'black';
+			ctx.fillText('You lose!', 231, 310);
+			var text = ctx.measureText('You win!');
+		}
+	}, {
 		key: 'render',
 		value: function render() {
 			var ctx = this.ctx,
@@ -268,7 +288,7 @@ var Game = function () {
 		_classCallCheck(this, Game);
 
 		// arrangement of pieces/empty cells
-		this.gameState = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 0, 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 'R', 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 0, 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
+		this.gameState = [[0, 'R', 0, 'R', 0, 'R', 0, 'R'], ['R', 0, 'R', 0, 'R', 0, 'R', 0], [0, 'R', 0, 'R', 0, 'R', 0, 'R'], [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0], ['B', 0, 'B', 0, 'B', 0, 'B', 0], [0, 'B', 0, 'B', 0, 'B', 0, 'B'], ['B', 0, 'B', 0, 'B', 0, 'B', 0]];
 		// if a valid move target has been clicked
 		this.cellSelected = false;
 		// cells that selected piece can move to
@@ -408,9 +428,28 @@ var Game = function () {
 		key: 'makeServerMove',
 		value: function makeServerMove(newState) {
 			this.gameState = newState;
+			this.cellSelected = false;
 			this.doneMoving = false;
 			this.hasJumped = false;
 			this.board.drawBoard();
+		}
+	}, {
+		key: 'onWin',
+		value: function onWin(endState) {
+			var board = this.board;
+
+			this.gameState = endState;
+			board.drawBoard();
+			board.drawWinMessage();
+		}
+	}, {
+		key: 'onLose',
+		value: function onLose(endState) {
+			var board = this.board;
+
+			this.gameState = endState;
+			board.drawBoard();
+			board.drawLoseMessage();
 		}
 
 		// used in case of redundant game starting from server
@@ -447,9 +486,22 @@ var Socket = function () {
 
 		this.socket = socket;
 		this.game = game;
+
 		socket.on('serverPassBoard', function (board) {
 			setTimeout(function () {
 				return _this.game.makeServerMove(board);
+			}, 1000);
+		});
+
+		socket.on('winEvent', function (board) {
+			setTimeout(function () {
+				return _this.game.onWin(board);
+			}, 1000);
+		});
+
+		socket.on('loseEvent', function (board) {
+			setTimeout(function () {
+				return _this.game.onLose(board);
 			}, 1000);
 		});
 	}

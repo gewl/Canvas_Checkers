@@ -7,12 +7,12 @@ export default class Game {
 		// arrangement of pieces/empty cells
 		this.gameState = [
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
-			[ 'R', 0, 'R', 0, 0, 0, 'R', 0 ],
+			[ 'R', 0, 'R', 0, 'R', 0, 'R', 0 ],
 			[ 0, 'R', 0, 'R', 0, 'R', 0, 'R' ],
 			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
-			[ 0, 'R', 0, 0, 0, 0, 0, 0 ],
+			[ 0, 0, 0, 0, 0, 0, 0, 0 ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ],
-			[ 0, 'B', 0, 0, 0, 'B', 0, 'B' ],
+			[ 0, 'B', 0, 'B', 0, 'B', 0, 'B' ],
 			[ 'B', 0, 'B', 0, 'B', 0, 'B', 0 ]
 		]
 		// if a valid move target has been clicked
@@ -133,9 +133,24 @@ export default class Game {
 
 	makeServerMove(newState) {
 		this.gameState = newState;
+		this.cellSelected = false;
 		this.doneMoving = false;
 		this.hasJumped = false;
-		this.board.drawBoard()	
+		this.board.drawBoard();
+	}
+
+	onWin(endState) {
+		let { board } = this;
+		this.gameState = endState;
+		board.drawBoard();
+		board.drawWinMessage();
+	}
+
+	onLose(endState) {
+		let { board } = this;
+		this.gameState = endState;
+		board.drawBoard();
+		board.drawLoseMessage();
 	}
 
 	// used in case of redundant game starting from server

@@ -128,6 +128,22 @@ export default class Board {
 		this.drawPieces()
 	}
 
+	drawWinMessage() {
+		let { ctx } = this
+		ctx.font = '48px serif'
+		ctx.fillStyle = 'black'
+		ctx.fillText('You win!', 231, 310)
+		var text = ctx.measureText('You win!')
+	}
+
+	drawLoseMessage() {
+		let { ctx } = this
+		ctx.font = '48px serif'
+		ctx.fillStyle = 'black'
+		ctx.fillText('You lose!', 231, 310)
+		var text = ctx.measureText('You win!')
+	}
+
 	render() {
 		let { ctx, boardWidth, cellWidth } = this
 		let fillYellow = true;
